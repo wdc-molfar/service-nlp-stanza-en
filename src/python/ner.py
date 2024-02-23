@@ -4,7 +4,7 @@ import sys, json, io
 
 import stanza
 
-from mitie import *
+#from mitie import *
 
 #MITIE_MODELS_PATH = "./MITIE-models/model.dat"
 #stanza.download('en')
