@@ -32,11 +32,12 @@ module.exports = NER
 // 	const extractor = new NER(config)
 // 	extractor.start()
 
-// 	const text = `На границе двум гражданам РФ, в частности артистке Марии Гусаровой (Mary Gu) из-за незаконного посещения захваченного Россией Крыма запретили въезд в Украину.`
+// 	const text = `United States of America is a country. Barack Obama was a president of it. His daughters are Sasha and Malia.`
 // 	console.log(text)
 // 	let res = await extractor.getNER(text)
 
 // 	console.log(res)
+// 	extractor.terminate();
 // }
 
 // run()
