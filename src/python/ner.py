@@ -75,6 +75,8 @@ if __name__=='__main__':
             elif method == 'extract_entities':
                 output = [
                     dict(entity=' '.join([(token.lemma.title() if token.text.istitle() else token.lemma)
+                                    for sent in nlp(ent.text).sentences for token in sent.words]).replace(" 's", "")
+                    if ent.type != "NORP" else ' '.join([(token.lemma.title() if token.text.istitle() else token.lemma)
                                     for sent in nlp(ent.text).sentences for token in sent.words]).replace(" 's", "'s"),
                     tag=ent.type,
                     range=get_range(doc, ent)
