@@ -1,23 +1,6 @@
 const { ServiceWrapper, AmqpManager, Middlewares } = require("@molfar/service-chassis")
 const { extend } = require("lodash")
-const path = require("path")
-
-
-const NER = require("./src/javascript/bridge")
- 
-const config = {
-     mode: 'text',
-     encoding: 'utf8',
-     pythonOptions: ['-u'],
-     pythonPath: (process.env.NODE_ENV && process.env.NODE_ENV == "production") ? 'python' : 'python.exe',
-     args: path.resolve(__dirname,"./MITIE-models/model.dat")	
-}
-
- const extractor = new NER(config)
-
- extractor.start()
-
-
+const axios = require("axios")
 
 let service = new ServiceWrapper({
     consumer: null,
@@ -26,15 +9,15 @@ let service = new ServiceWrapper({
 
     //-------------- Add heartbeat exported method
 
-         async onHeartbeat(data, resolve){
-            resolve({})
-        },
+    async onHeartbeat(data, resolve){
+        resolve({})
+    },
  
     //--------------------------------------------
-
-    
+   
 
     async onConfigure(config, resolve) {
+
         this.config = config
 
         console.log(`configure ${ this.config._instance_name || this.config._instance_id}`)
@@ -65,13 +48,16 @@ let service = new ServiceWrapper({
 
             async (err, msg, next) => {
                 let m = msg.content
-                let res = await extractor.getNER(m.scraper.message.text)
-                m = extend({}, m, {
-                        ner: res.data.response.named_entities
+                let res = await axios.post(
+                    this.config.service.stanza.url,
+                    {
+                        text: m.scraper.message.text
                     }
                 )
-                this.publisher.send(m)
-                console.log(`RECOGNIZE ${res.data.response.named_entities.length} named entities`)
+                if( !res.data.response.error ){
+                    m = extend( {}, m, { nlp: res.data.response} )
+                    this.publisher.send(m)
+                }
                 msg.ack()
             }
 
