@@ -54,10 +54,13 @@ let service = new ServiceWrapper({
                         text: m.scraper.message.text
                     }
                 )
-                if( !res.data.response.error ){
+                if( !res.data.error ){
                     m = extend( {}, m, { nlp: res.data.response} )
                     this.publisher.send(m)
+                } else {
+                    console.log(new Date(), res.data.error)
                 }
+                
                 msg.ack()
             }
 
