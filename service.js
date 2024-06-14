@@ -1,6 +1,6 @@
 const { ServiceWrapper, AmqpManager, Middlewares } = require("@molfar/service-chassis")
 const { extend } = require("lodash")
-const axios = require("axios")
+const processMessage = require("./worker")
 
 let service = new ServiceWrapper({
     consumer: null,
@@ -9,12 +9,12 @@ let service = new ServiceWrapper({
 
     //-------------- Add heartbeat exported method
 
-    async onHeartbeat(data, resolve){
+    async onHeartbeat(data, resolve) {
         resolve({})
     },
- 
+
     //--------------------------------------------
-   
+
 
     async onConfigure(config, resolve) {
 
@@ -29,45 +29,40 @@ let service = new ServiceWrapper({
             Middlewares.Schema.validator(this.config.service.consume.message),
             Middlewares.Error.Log,
             Middlewares.Error.BreakChain,
-            
+
 
             async (err, msg, next) => {
-                console.log("CONSUME", msg.content)
-                next()
-            },    
+                    console.log("CONSUME", msg.content)
+                    next()
+                },
 
-            Middlewares.Filter( msg =>  {
-                if( msg.content.langDetector.language.locale != "en") {
-                    console.log("IGNORE", msg.content.langDetector.language.locale)
-                    msg.ack()
-                } else {
-                    console.log("ACCEPT", msg.content.langDetector.language.locale)
-                } 
-                return msg.content.langDetector.language.locale == "en"
-            }),
-
-            async (err, msg, next) => {
-                let m = msg.content
-                let res = await axios.post(
-                    this.config.service.stanza.url,
-                    {
-                        text: m.scraper.message.text
+                Middlewares.Filter(msg => {
+                    if (msg.content.langDetector.language.locale != "en") {
+                        console.log("IGNORE", msg.content.langDetector.language.locale)
+                        msg.ack()
+                    } else {
+                        console.log("ACCEPT", msg.content.langDetector.language.locale)
                     }
-                )
-                if( !res.data.error ){
-                    m = extend( {}, m, { nlp: res.data.response} )
-                    this.publisher.send(m)
-                } else {
-                    console.log(new Date(), res.data.error)
+                    return msg.content.langDetector.language.locale == "en"
+                }),
+
+                async (err, msg, next) => {
+                    let m = msg.content
+                    let res = await processMessage(config, m)
+                    if (!res.error) {
+                        m = extend({}, m, res)
+                        this.publisher.send(m)
+                    } else {
+                        console.log(res.error)
+                    }
+
+                    msg.ack()
                 }
-                
-                msg.ack()
-            }
 
         ])
 
         this.publisher = await AmqpManager.createPublisher(this.config.service.produce)
-        
+
         await this.publisher.use([
             Middlewares.Schema.validator(this.config.service.produce.message),
             Middlewares.Error.Log,
