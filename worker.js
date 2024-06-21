@@ -59,14 +59,21 @@ const processMessage = async (config, m) => {
         ]
     )
 
-
-    if (!stanzaResponse.data.error && !embeddingResponse.data.detail) {
-        return {
-            nlp: extend({},
-                stanzaResponse.data.response, { embedding: embeddingResponse.data.response }
-            )
+    if(stanzaResponse.data && embeddingResponse.data){
+        if (!stanzaResponse.data.error && !embeddingResponse.data.detail) {
+            return {
+                nlp: extend({},
+                    stanzaResponse.data.response, { embedding: embeddingResponse.data.response }
+                )
+            }
         }
-    }
+    } else {
+        if(!stanzaResponse.data) console.log("STANZA ERROR", JSON.stringify(stanzaResponse))
+        if(!embeddingResponse.data) console.log("EMBEDDING ERROR", JSON.stringify(embeddingResponse))
+        return {
+            error: "No data"
+        }    
+    }    
 
     return {
         error: `
@@ -90,7 +97,7 @@ module.exports = processMessage
 //     const config = {
 //         service: {
 //             stanza: {
-//                 url: "https://embedding-rest.molfar.science/embedding" //"https://stanza.molfar.science/stanza"
+//                 url: "https://stanza-nvidia.molfar.science/stanza"
 //             },
 //             embedding: {
 //                 url: "https://embedding-rest.molfar.science/embedding"
@@ -106,7 +113,20 @@ module.exports = processMessage
 //         }
 //     }
 
-//     console.log((await processMessage(config, m)))
+//     for( let i=1; i < 5; i++) {
+//         await Promise.all([
+//             (async () => {
+//                 console.log(i, 1, (await processMessage(config, m)))        
+//             })(),
+//             (async () => {
+//                 console.log(i, 2, (await processMessage(config, m)))        
+//             })(),
+//             (async () => {
+//                 console.log(i, 3,(await processMessage(config, m)))        
+//             })()
+//         ])
+        
+//     }    
 
 // }
 

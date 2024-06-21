@@ -111,7 +111,7 @@ service:
     ############################################################
  
     stanza:
-        url: https://stanza.molfar.science/stanza  # stanza-rest endpoint
+        url: https://stanza-nvidia.molfar.science/stanza  # stanza-rest endpoint
    
     embedding:
         url: https://embedding-rest.molfar.science/embedding  # embedding-rest endpoint
